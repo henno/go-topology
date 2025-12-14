@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type Config struct {
@@ -38,15 +39,44 @@ func loadConfig() (*Config, error) {
 	return &config, nil
 }
 
+func isMockMode() bool {
+	mockEnv := os.Getenv("NETMAP_MOCK")
+	return mockEnv == "true" || mockEnv == "1"
+}
+
+func mockModeHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Inject mock mode indicator into HTML responses
+		if isMockMode() && strings.HasSuffix(r.URL.Path, ".html") || r.URL.Path == "/" {
+			w.Header().Set("X-Mock-Mode", "true")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	config, err := loadConfig()
 	if err != nil {
 		log.Fatalf("Configuration error: %v", err)
 	}
 
+	mockMode := isMockMode()
+	if mockMode {
+		log.Printf("🧪 Running in MOCK MODE")
+	}
+
 	// Serve static files from web/ directory
 	fs := http.FileServer(http.Dir("web"))
-	http.Handle("/", fs)
+	http.Handle("/", mockModeHandler(fs))
+
+	// API endpoint to check mock mode
+	http.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		status := map[string]interface{}{
+			"mock_mode": mockMode,
+		}
+		json.NewEncoder(w).Encode(status)
+	})
 
 	addr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 	log.Printf("Starting NetMap server on %s", addr)

@@ -14,7 +14,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:9090',
     trace: 'on-first-retry',
   },
   projects: [
@@ -25,7 +25,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'docker compose -f docker-compose.yml -f docker-compose.dev.yml up',
-    url: 'http://localhost:8080',
+    url: 'http://localhost:9090',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

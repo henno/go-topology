@@ -26,7 +26,7 @@ COPY web /app/web
 COPY config.json /app/config.json
 
 # Expose port
-EXPOSE 8080
+EXPOSE 9090
 
 # Run the server
 CMD ["/app/server"]
