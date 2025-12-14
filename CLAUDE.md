@@ -22,17 +22,20 @@ docker-compose.dev.yml   Development/mock mode overlay
 ## Commands
 
 ```bash
+# Development workflow
+bun dev                           # Rebuild Docker + run tests (full cycle)
+bun pw                            # Run tests (server must be running)
+bun pw:headed                     # Run tests with visible browser
+
 # Docker
-docker compose up -d              # Start server
-docker compose down               # Stop server
-docker build -t netmap .          # Build image
+bun docker:rebuild                # Stop, rebuild, and restart containers
+bun docker:up                     # Start containers in mock mode
+bun docker:down                   # Stop containers
+bun docker:build                  # Build Docker image
+bun docker:logs                   # View container logs
 
-# Mock mode
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# Tests (server must be running)
-bun test
-bun test --headed                 # With visible browser
+# Build
+bun build                         # Build Go binary locally
 
 # CI locally (requires act + Docker)
 act -j test

@@ -12,13 +12,10 @@ Network topology discovery tool. Web UI to scan networks and display discovered 
 ## Quick Start
 
 ```bash
-# Start server
-docker compose up -d
+# Start server in mock mode (for testing)
+bun docker:up
 
-# Or in mock mode (for testing)
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-
-# Open http://localhost:8080
+# Open http://localhost:9090
 ```
 
 ## Development
@@ -32,10 +29,12 @@ gh issue view 4
 # Create branch
 git checkout -b 4-scan-api
 
-# Start server and run tests
-docker compose up -d
-bun test
-docker compose down
+# Full dev cycle: rebuild + test
+bun dev
+
+# Or step by step
+bun docker:rebuild
+bun pw
 ```
 
 ## Project Structure

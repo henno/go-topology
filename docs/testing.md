@@ -30,6 +30,8 @@ tests/
 
 ### Feature Files
 
+**Naming convention:** Feature files must be named `{issue-number}-{description}.feature` where the issue number is zero-padded to 4 digits (e.g., `0004-scan-api.feature`).
+
 Copy acceptance criteria from GitHub issues into feature files:
 
 ```bash
@@ -38,7 +40,7 @@ gh issue view 4
 ```
 
 ```gherkin
-# tests/features/scan.feature
+# tests/features/0004-scan-api.feature
 Feature: Scan API
 
   Scenario: Start a scan

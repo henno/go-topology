@@ -3,9 +3,17 @@
   "version": "0.1.0",
   "description": "Network topology discovery tool",
   "scripts": {
-    "test": "bddgen && playwright test",
-    "test:headed": "bddgen && playwright test --headed",
-    "test:debug": "bddgen && playwright test --debug"
+    "pw": "bddgen && playwright test",
+    "pw:headed": "bddgen && playwright test --headed",
+    "pw:debug": "bddgen && playwright test --debug",
+    "build": "go build -o server ./cmd/server",
+    "docker:build": "docker compose build",
+    "docker:build:nocache": "docker compose build --no-cache",
+    "docker:up": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker logs go-topology-server-1",
+    "docker:rebuild": "bun docker:down && bun docker:build && bun docker:up",
+    "dev": "bun docker:rebuild && sleep 2 && bun pw"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

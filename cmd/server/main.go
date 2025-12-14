@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/henno/go-topology/internal/scan"
+	"github.com/henno/go-topology/internal/scanner"
 )
 
 type Config struct {
@@ -54,6 +57,74 @@ func mockModeHandler(next http.Handler) http.Handler {
 	})
 }
 
+// handleStartScan handles POST /api/scans
+func handleStartScan(w http.ResponseWriter, r *http.Request, manager *scan.Manager) {
+	var req struct {
+		Network    string `json:"network"`
+		CoreSwitch string `json:"core_switch"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Network == "" {
+		http.Error(w, "network is required", http.StatusBadRequest)
+		return
+	}
+
+	s, err := manager.StartScan(req.Network, req.CoreSwitch)
+	if err != nil {
+		if err.Error() == "scan already in progress" {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(s)
+}
+
+// handleGetCurrentScan handles GET /api/scans/current
+func handleGetCurrentScan(w http.ResponseWriter, r *http.Request, manager *scan.Manager) {
+	s, err := manager.GetCurrentScan()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s)
+}
+
+// handleGetScan handles GET /api/scans/{id}
+func handleGetScan(w http.ResponseWriter, r *http.Request, manager *scan.Manager, scanID string) {
+	s, err := manager.GetScan(scanID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s)
+}
+
+// handleCancelScan handles DELETE /api/scans/{id}
+func handleCancelScan(w http.ResponseWriter, r *http.Request, manager *scan.Manager, scanID string) {
+	s, err := manager.CancelScan(scanID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(s)
+}
+
 func main() {
 	config, err := loadConfig()
 	if err != nil {
@@ -65,12 +136,23 @@ func main() {
 		log.Printf("🧪 Running in MOCK MODE")
 	}
 
-	// Serve static files from web/ directory
-	fs := http.FileServer(http.Dir("web"))
-	http.Handle("/", mockModeHandler(fs))
+	// Initialize scanner
+	var s scanner.Scanner
+	if mockMode {
+		s = scanner.NewMockScanner()
+	} else {
+		// TODO: Initialize real scanner when implemented
+		log.Fatal("Real scanner not yet implemented. Use NETMAP_MOCK=true")
+	}
+
+	// Initialize scan manager
+	scanManager := scan.NewManager(s)
+
+	// Create a custom router to handle API and static files
+	mux := http.NewServeMux()
 
 	// API endpoint to check mock mode
-	http.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		status := map[string]interface{}{
 			"mock_mode": mockMode,
@@ -78,11 +160,53 @@ func main() {
 		json.NewEncoder(w).Encode(status)
 	})
 
+	// Scan API endpoints
+	mux.HandleFunc("/api/scans/current", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleGetCurrentScan(w, r, scanManager)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Handle POST /api/scans (exact match without trailing slash)
+	mux.HandleFunc("/api/scans", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handleStartScan(w, r, scanManager)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})
+
+	// Handle GET/DELETE /api/scans/{id}
+	mux.HandleFunc("/api/scans/", func(w http.ResponseWriter, r *http.Request) {
+		// Extract scan ID from path
+		scanID := strings.TrimPrefix(r.URL.Path, "/api/scans/")
+		if scanID == "" || scanID == "current" {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			handleGetScan(w, r, scanManager, scanID)
+		case http.MethodDelete:
+			handleCancelScan(w, r, scanManager, scanID)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Serve static files from web/ directory
+	fs := http.FileServer(http.Dir("web"))
+	mux.Handle("/", mockModeHandler(fs))
+
 	addr := fmt.Sprintf("%s:%d", config.Server.Host, config.Server.Port)
 	log.Printf("Starting NetMap server on %s", addr)
 	log.Printf("Serving static files from web/")
 
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }

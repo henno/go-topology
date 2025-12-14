@@ -61,10 +61,9 @@ func (m *MockScanner) Scan(network string) (<-chan Device, error) {
 		// Emit devices with a small delay to simulate discovery
 		for _, device := range fixtures {
 			ch <- device
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 
 	return ch, nil
 }
-
