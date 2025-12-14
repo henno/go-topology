@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
+# Generated BDD files
+.features-gen/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.log
+
