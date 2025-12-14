@@ -1,0 +1,9 @@
+# Override for development/mock mode
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  server:
+    environment:
+      - NETMAP_MOCK=true
+    volumes:
+      - ./src:/app/src:ro  # Hot reload source (if supported)

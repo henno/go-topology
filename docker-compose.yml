@@ -1,0 +1,10 @@
+services:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - NETMAP_CONFIG=/app/config.json
+    volumes:
+      - ./web:/app/web:ro
+      - ./config.json:/app/config.json:ro
