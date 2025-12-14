@@ -198,6 +198,14 @@ func main() {
 		}
 	})
 
+	// Serve HTML pages with clean URLs
+	mux.HandleFunc("/scan", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/scan.html")
+	})
+	mux.HandleFunc("/devices", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/devices.html")
+	})
+
 	// Serve static files from web/ directory
 	fs := http.FileServer(http.Dir("web"))
 	mux.Handle("/", mockModeHandler(fs))

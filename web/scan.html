@@ -21,7 +21,70 @@
         <main class="content">
             <div id="app">
                 <h2>Network Scan</h2>
-                <p>Scan page - to be implemented</p>
+
+                <!-- Scan Form -->
+                <div class="scan-form">
+                    <div class="form-group">
+                        <label for="network">Network Range (CIDR)</label>
+                        <input
+                            type="text"
+                            id="network"
+                            name="network"
+                            placeholder="192.168.1.0/24"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="core-switch">Core Switch IP</label>
+                        <input
+                            type="text"
+                            id="core-switch"
+                            name="core-switch"
+                            placeholder="192.168.1.1"
+                            required
+                        >
+                    </div>
+
+                    <div class="error-message" style="display: none;"></div>
+
+                    <div class="form-actions">
+                        <button type="button" id="start-btn" class="btn btn-primary">Start</button>
+                        <button type="button" id="cancel-btn" class="btn btn-secondary" style="display: none;">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Scan Status -->
+                <div class="scan-status" style="display: none;">
+                    Status: <span id="status-text">Idle</span>
+                </div>
+
+                <!-- Device Count -->
+                <div class="device-count" style="display: none;">
+                    Devices found: <span id="device-count-text">0</span>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <p>No scan has been run yet. Enter a network range and core switch IP above to start a scan.</p>
+                </div>
+
+                <!-- Device Table -->
+                <div class="device-table-container" style="display: none;">
+                    <h3>Discovered Devices</h3>
+                    <table class="device-table">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Hostname</th>
+                                <th>Type</th>
+                                <th>Vendor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="device-table-body">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
