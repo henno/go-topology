@@ -141,8 +141,8 @@ func main() {
 	if mockMode {
 		s = scanner.NewMockScanner()
 	} else {
-		// TODO: Initialize real scanner when implemented
-		log.Fatal("Real scanner not yet implemented. Use NETMAP_MOCK=true")
+		s = scanner.NewRealScanner(config.Scanner.Workers, config.Scanner.TimeoutMs)
+		log.Printf("🔍 Running in PRODUCTION MODE with %d workers", config.Scanner.Workers)
 	}
 
 	// Initialize scan manager
